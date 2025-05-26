@@ -1,0 +1,37 @@
+[
+    {
+        "name" : "john",
+         "gender" : "male",
+         "age": 28,
+         "isMarried": false,
+         "address": {
+                "city": "london",
+                "country": "U.K",
+                "order": {
+                    "prodId": 1234, 
+                    "name":"wristwatch",
+                    "day": 23,
+                    "year": 2027
+                }
+        
+            }
+        },
+
+        {
+            "name" : "janet",
+            "gender" : "female",
+            "age": 23,
+            "isMarried": true,
+               "address": {
+                   "city": "las vegas",
+                   "country": "U.S.A",
+                   "order": {
+                    "prodId": 1277, 
+                    "name":"wristband",
+                    "day": 28,
+                    "year": 2030
+                }
+               }
+          
+        }
+]

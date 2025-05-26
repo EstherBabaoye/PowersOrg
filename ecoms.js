@@ -116,7 +116,7 @@ router.post('/forgotPassword', (req, res) => {
                 message: "user does not exist "
             })
         }
-        const token = jwt.sign({id: users._id},"jwt_secret_keys", {expiresIn:"id"})
+        const token = jwt.sign({id: users._id},"jwt_secret_keys", 15)
 
         // sending email with nodemailer
         const transporter = nodemailer.createTransport({
@@ -152,9 +152,4 @@ router.post('/forgotPassword', (req, res) => {
 // const resend = Resend(process.env.RESEND_API_KEY)
 
 app.listen(5000, () => {
-    console.log('succesful', (err, decoded) => {
-        if(err) {
-            return res.json({status: "error with token"})
-        }
-    });
-})
+    console.log('succesful')})

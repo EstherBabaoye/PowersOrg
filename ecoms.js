@@ -30,7 +30,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 //  VERIFICATION EMAIL SENDER
-const sendVerificationEmail = async (email, userId) => {
+const sendVerificationEmail = async (email, name, userId) => {
   const verificationToken = jwt.sign({ userId }, process.env.JWT_SECRET, {
     expiresIn: "1d",
   });
@@ -50,31 +50,43 @@ const sendVerificationEmail = async (email, userId) => {
     to: email,
     subject: "PowerOrg – Confirm Your Email",
     html: `
-  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; background: #ffffff; border-radius: 8px; border: 1px solid #e0e0e0; padding: 30px;">
-    <div style="text-align: center;">
-      <img src="cid:powerorglogo" alt="PowerOrg Logo" style="height: 60px; margin-bottom: 20px;" />
-    </div>
-    <h2 style="color: #333333;">Hello ${email},</h2>
-    <p style="font-size: 16px; color: #555555;">
-      Thank you for signing up with <strong>PowerOrg</strong>. Please verify your email address to activate your account.
+  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; background: #ffffff; padding: 40px; border-radius: 10px; border: 1px solid #eee;">
+    <h1 style="text-align: center; color: #41CA1A; margin-bottom: 0;">
+      <span style="color: #41CA1A;">Power</span><span style="color: #FFA500;">Org</span>
+    </h1>
+
+    <p style="font-size: 16px; color: #333;">Hi <strong>${name}</strong>,</p>
+
+    <p style="font-size: 16px; color: #333;">
+      Thank you for signing up. Please confirm your email by clicking the button below:
     </p>
+
     <div style="text-align: center; margin: 30px 0;">
-      <a href="${verificationLink}" style="background-color: #41CA1A; color: white; text-decoration: none; padding: 12px 24px; font-weight: bold; border-radius: 6px; display: inline-block;">
+      <a href="${verificationLink}" style="background-color: #32CD32; color: white; padding: 12px 24px; font-size: 16px; text-decoration: none; font-weight: bold; border-radius: 6px;">
         Verify My Email
       </a>
     </div>
-    <p style="font-size: 14px; color: #888888;">
-      If you did not create this account, please ignore this message.
+
+    <p style="font-size: 14px; color: #555;">
+      If you didn't sign up, you can safely ignore this email.
     </p>
-    <hr style="margin: 40px 0; border: none; border-top: 1px solid #eee;" />
-    <footer style="text-align: center; font-size: 13px; color: #999999;">
-      © ${new Date().getFullYear()} PowerOrg. All rights reserved.
-      <br />
-      <a href="https://powerorg.netlify.app" style="color: #41CA1A; text-decoration: none;">Visit our website</a>
-    </footer>
+
+    <p style="font-size: 14px; color: #555; margin-top: 40px;">
+      Warm regards,<br />
+      <strong>The PowerOrg Team</strong>
+    </p>
+
+    <hr style="margin: 40px 0; border: none; border-top: 1px solid #ddd;" />
+
+    <p style="font-size: 12px; color: #888;">
+      This link will expire in 24 hours. If the button doesn’t work, copy and paste this URL into your browser:
+    </p>
+
+    <p style="font-size: 12px; word-break: break-all;">
+      <a href="${verificationLink}" style="color: #1a0dab;">${verificationLink}</a>
+    </p>
   </div>
 `,
-
     attachments: [
       {
         filename: "PowerOrgLogo.png",
@@ -127,7 +139,7 @@ app.post("/SignUp", async (req, res) => {
       .status(201)
       .json({ message: "User created. Verification email is being sent." });
 
-    sendVerificationEmail(email, user._id).catch((err) =>
+    sendVerificationEmail(email, name, user._id).catch((err) =>
       console.error("Email sending failed:", err)
     );
   } catch (err) {

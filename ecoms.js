@@ -11,13 +11,13 @@ const register = require("./REst_api_auth/schema2");
 
 const app = express();
 
-// ✅ CONNECT TO MONGODB
+//  CONNECT TO MONGODB
 mongoose
   .connect(process.env.CONN_STR)
   .then(() => console.log("✅ MongoDB connected"))
   .catch((err) => console.error("❌ MongoDB error:", err));
 
-// ✅ MIDDLEWARE
+//  MIDDLEWARE
 app.use(
   cors({
     origin: ["http://localhost:5173", "https://powerorg.netlify.app"],
@@ -29,7 +29,7 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ VERIFICATION EMAIL SENDER
+//  VERIFICATION EMAIL SENDER
 const sendVerificationEmail = async (email, userId) => {
   const verificationToken = jwt.sign({ userId }, process.env.JWT_SECRET, {
     expiresIn: "1d",
@@ -66,7 +66,7 @@ const sendVerificationEmail = async (email, userId) => {
   return transporter.sendMail(mailOptions);
 };
 
-// ✅ SIGN UP
+//  SIGN UP
 app.post("/SignUp", async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -100,7 +100,7 @@ app.post("/SignUp", async (req, res) => {
   }
 });
 
-// ✅ EMAIL VERIFICATION
+//  EMAIL VERIFICATION
 app.get("/verify-email", async (req, res) => {
   const token = req.query.token;
   if (!token) return res.status(400).json({ message: "Verification token missing" });
@@ -122,7 +122,7 @@ app.get("/verify-email", async (req, res) => {
   }
 });
 
-// ✅ RESEND VERIFICATION
+//  RESEND VERIFICATION
 app.post("/resend-verification", async (req, res) => {
   const { email } = req.body;
 
@@ -141,7 +141,7 @@ app.post("/resend-verification", async (req, res) => {
   }
 });
 
-// ✅ SIGN IN (FIXED 🔧)
+//  SIGN IN 
 app.post("/SignIn", async (req, res) => {
   const { email, password } = req.body;
 
@@ -149,7 +149,6 @@ app.post("/SignIn", async (req, res) => {
     return res.status(400).json({ message: "Email and password are required" });
   }
 
-  // ✅ FIX: Explicitly select password
   const user = await register.findOne({ email }).select("+password");
 
   if (!user || !user.password) {

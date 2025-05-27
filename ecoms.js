@@ -35,7 +35,7 @@ const sendVerificationEmail = async (email, userId) => {
     expiresIn: "1d",
   });
 
-  const verificationLink = `http://localhost:5173/verify-email?token=${verificationToken}`;
+  const verificationLink = `https://powerorg.netlify.app/verify-email?token=${verificationToken}`;
 
   const transporter = nodemailer.createTransport({
     service: "gmail",

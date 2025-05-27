@@ -50,10 +50,31 @@ const sendVerificationEmail = async (email, userId) => {
     to: email,
     subject: "PowerOrg – Confirm Your Email",
     html: `
-      <p>Hi <strong>${email}</strong>,</p>
-      <p>Please confirm your email:</p>
-      <a href="${verificationLink}">Verify My Email</a>
-    `,
+  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; background: #ffffff; border-radius: 8px; border: 1px solid #e0e0e0; padding: 30px;">
+    <div style="text-align: center;">
+      <img src="cid:powerorglogo" alt="PowerOrg Logo" style="height: 60px; margin-bottom: 20px;" />
+    </div>
+    <h2 style="color: #333333;">Hello ${email},</h2>
+    <p style="font-size: 16px; color: #555555;">
+      Thank you for signing up with <strong>PowerOrg</strong>. Please verify your email address to activate your account.
+    </p>
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${verificationLink}" style="background-color: #41CA1A; color: white; text-decoration: none; padding: 12px 24px; font-weight: bold; border-radius: 6px; display: inline-block;">
+        Verify My Email
+      </a>
+    </div>
+    <p style="font-size: 14px; color: #888888;">
+      If you did not create this account, please ignore this message.
+    </p>
+    <hr style="margin: 40px 0; border: none; border-top: 1px solid #eee;" />
+    <footer style="text-align: center; font-size: 13px; color: #999999;">
+      © ${new Date().getFullYear()} PowerOrg. All rights reserved.
+      <br />
+      <a href="https://powerorg.netlify.app" style="color: #41CA1A; text-decoration: none;">Visit our website</a>
+    </footer>
+  </div>
+`,
+
     attachments: [
       {
         filename: "PowerOrgLogo.png",
@@ -70,9 +91,22 @@ const sendVerificationEmail = async (email, userId) => {
 app.post("/SignUp", async (req, res) => {
   try {
     const { name, email, password } = req.body;
+    if (
+      password.length < 8 ||
+      !/[A-Z]/.test(password) ||
+      !/[a-z]/.test(password) ||
+      !/[0-9]/.test(password)
+    ) {
+      return res.status(400).json({
+        message:
+          "Password must be at least 8 characters long and include uppercase, lowercase, and a number.",
+      });
+    }
 
     if (!name || !email || !password) {
-      return res.status(400).json({ message: "Name, email, and password required!" });
+      return res
+        .status(400)
+        .json({ message: "Name, email, and password required!" });
     }
 
     const existingUser = await register.findOne({ email });
@@ -89,7 +123,9 @@ app.post("/SignUp", async (req, res) => {
     });
     await user.save();
 
-    res.status(201).json({ message: "User created. Verification email is being sent." });
+    res
+      .status(201)
+      .json({ message: "User created. Verification email is being sent." });
 
     sendVerificationEmail(email, user._id).catch((err) =>
       console.error("Email sending failed:", err)
@@ -103,7 +139,8 @@ app.post("/SignUp", async (req, res) => {
 //  EMAIL VERIFICATION
 app.get("/verify-email", async (req, res) => {
   const token = req.query.token;
-  if (!token) return res.status(400).json({ message: "Verification token missing" });
+  if (!token)
+    return res.status(400).json({ message: "Verification token missing" });
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -115,7 +152,9 @@ app.get("/verify-email", async (req, res) => {
 
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    res.status(200).json({ status: "success", message: "Email verified successfully!" });
+    res
+      .status(200)
+      .json({ status: "success", message: "Email verified successfully!" });
   } catch (err) {
     console.error("Verification error:", err);
     res.status(400).json({ message: "Invalid or expired token" });
@@ -141,7 +180,7 @@ app.post("/resend-verification", async (req, res) => {
   }
 });
 
-//  SIGN IN 
+//  SIGN IN
 app.post("/SignIn", async (req, res) => {
   const { email, password } = req.body;
 
@@ -159,7 +198,6 @@ app.post("/SignIn", async (req, res) => {
     return res.status(403).json({ message: "Please verify your email first" });
   }
 
-  
   // console.log("Input password:", password);
   // console.log("Stored hash:", user.password);
 
@@ -172,7 +210,7 @@ app.post("/SignIn", async (req, res) => {
     expiresIn: "1h",
   });
 
-  return res.json({ message: "Sign in successful", token, name: user.name,});
+  return res.json({ message: "Sign in successful", token, name: user.name });
 });
 
 // ✅ START SERVER

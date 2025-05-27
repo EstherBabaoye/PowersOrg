@@ -1,155 +1,183 @@
-const express = require('express')
-const bcrypt = require ('bcrypt')
-const cors = require('cors') 
-const nodemailer = require('nodemailer')
-const helmet = require('helmet')
-const cookieParser = require('cookie-parser')
-const newCollection = require('./../new node/database_models/schema')
-const forgotPassword = require('./forgotPassword')
-const jwt = require('jsonwebtoken')
-const register = require('./REst_api_auth/schema2')
-const Collection = require('./src/config')
+require("dotenv").config();
+const express = require("express");
+const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
+const cors = require("cors");
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
+const nodemailer = require("nodemailer");
 
-const router = express.Router()
+const register = require("./REst_api_auth/schema2");
 
-const app = express()
+const app = express();
 
-// convert data into json format
-app.use(cors({
-    origin: ['http://localhost:27017'],
+// ✅ CONNECT TO MONGODB
+mongoose
+  .connect(process.env.CONN_STR)
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch((err) => console.error("❌ MongoDB error:", err));
+
+// ✅ MIDDLEWARE
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "https://powerorg.netlify.app"],
     methods: ["GET", "POST"],
-    credentials: true
-}))
-// app.use(helmet())
-app.use(cookieParser())
-app.use(express.json())
-app.use(newCollection)
+    credentials: true,
+  })
+);
+app.use(cookieParser());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-app.use(express.urlencoded({extended:true}))
+// ✅ VERIFICATION EMAIL SENDER
+const sendVerificationEmail = async (email, userId) => {
+  const verificationToken = jwt.sign({ userId }, process.env.JWT_SECRET, {
+    expiresIn: "1d",
+  });
 
-// mongoose.connect("mongodb://localhost:27017/myGoals")
- 
+  const verificationLink = `http://localhost:5173/verify-email?token=${verificationToken}`;
 
-router.post('/login', (req,res) => {
-    res.render('login')
-    const user = {
-        id:1,
-        username: 'username'
-    }
-    const token = jwt.sign(user, SECRET_KEY, {expiresIn: '1h'})
-})
-router.get('/SignIn', (req, res) => {
-    res.end("SignIn")
-})
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
 
-router.post('/SignIn', async (req, res) => {
-    const {email, password} = req.body
+  const mailOptions = {
+    from: `"PowerOrg Support" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: "PowerOrg – Confirm Your Email",
+    html: `
+      <p>Hi <strong>${email}</strong>,</p>
+      <p>Please confirm your email:</p>
+      <a href="${verificationLink}">Verify My Email</a>
+    `,
+    attachments: [
+      {
+        filename: "PowerOrgLogo.png",
+        path: "./PowerOrgLogo.png",
+        cid: "powerorglogo",
+      },
+    ],
+  };
 
-    // to find user by email
+  return transporter.sendMail(mailOptions);
+};
 
-    const user = await Collection.findOne({ email });
+// ✅ SIGN UP
+app.post("/SignUp", async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
 
-    if(!user){ 
-        return res.status(400).json({message:'Invalid email or password'})
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        return res.status(400).json({ message: 'Invalid email format' });
-    }
-    // to check if the password is the right password
-
-    const checkPassword = await bcrypt.compare(password, user.password)
-    
-    if(!checkPassword){
-        return res.status(400).json({
-            message: 'invalid email or password'
-        })
-    }
-
-    // jwt token
-    const token = jwt.sign({userId: user._id}, "your token", {
-        expiresIn:'1h'
-    })
-    res.json({message:'sign in successful', token})
-
-    const userData = await Collection.insertMany(data)
-    console.log(userData);
-})
-
-router.get('/SignUp', (req, res) => {
-    res.render("SignUp")
-})
-
-router.post('/SignUp', async (req, res) => {
-    const{name, email, password} = req.body
     if (!name || !email || !password) {
-        return res.send({
-            status: "failed",
-            message: "Name, email and password required!"
-        })
+      return res.status(400).json({ message: "Name, email, and password required!" });
     }
 
-    try{
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const user = new register({name, email, password:hashedPassword})
-        await user.save()
-        res.status(201).json({ message: "User created successfully" });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+    const existingUser = await register.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({ message: "Email already exists" });
     }
-    const SignUpDetails = await Collection.insertMany(data1)
-    console.log(SignUpDetails);
-    })
 
-router.get('/forgotPasswod', (req, res) => {
-    res.render("forgotPassword")
-})
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new register({
+      name,
+      email,
+      password: hashedPassword,
+      isVerified: false,
+    });
+    await user.save();
 
-router.post('/forgotPassword', (req, res) => {
-    const {email} = req.body
-    forgotPassword.findOne({email:email})
-    .then(users => {
-        if(!users){
-            return res.send({
-                status: 'failed',
-                message: "user does not exist "
-            })
-        }
-        const token = jwt.sign({id: users._id},"jwt_secret_keys", 15)
+    res.status(201).json({ message: "User created. Verification email is being sent." });
 
-        // sending email with nodemailer
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-              user: 'youremail@gmail.com',
-              pass: 'yourpassword'
-            }
-          });
+    sendVerificationEmail(email, user._id).catch((err) =>
+      console.error("Email sending failed:", err)
+    );
+  } catch (err) {
+    console.error("Signup error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
-        //   configuring the mailOptions
-          
-          const mailOptions = {
-            from: 'youremail@gmail.com',
-            to: 'myfriend@yahoo.com',
-            subject: 'Reset your password',
-            text: 'Done!'
-          };
+// ✅ EMAIL VERIFICATION
+app.get("/verify-email", async (req, res) => {
+  const token = req.query.token;
+  if (!token) return res.status(400).json({ message: "Verification token missing" });
 
-        //   send the email
-          
-          transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-              console.log(error);
-            } else {
-              return res.send({status: "success"});
-            }
-          });
-    })
-})
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await register.findByIdAndUpdate(
+      decoded.userId,
+      { isVerified: true, emailVerifiedAt: new Date() },
+      { new: true }
+    );
 
-// Resend email
-// const resend = Resend(process.env.RESEND_API_KEY)
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-app.listen(5000, () => {
-    console.log('succesful')})
+    res.status(200).json({ status: "success", message: "Email verified successfully!" });
+  } catch (err) {
+    console.error("Verification error:", err);
+    res.status(400).json({ message: "Invalid or expired token" });
+  }
+});
+
+// ✅ RESEND VERIFICATION
+app.post("/resend-verification", async (req, res) => {
+  const { email } = req.body;
+
+  const user = await register.findOne({ email });
+  if (!user) return res.status(404).json({ message: "User not found" });
+
+  if (user.isVerified)
+    return res.status(400).json({ message: "Email already verified" });
+
+  try {
+    await sendVerificationEmail(email, user._id);
+    res.json({ message: "Verification email resent" });
+  } catch (err) {
+    console.error("Email resend error:", err);
+    res.status(500).json({ message: "Failed to resend verification email" });
+  }
+});
+
+// ✅ SIGN IN (FIXED 🔧)
+app.post("/SignIn", async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: "Email and password are required" });
+  }
+
+  // ✅ FIX: Explicitly select password
+  const user = await register.findOne({ email }).select("+password");
+
+  if (!user || !user.password) {
+    return res.status(400).json({ message: "Invalid email or password" });
+  }
+
+  if (!user.isVerified) {
+    return res.status(403).json({ message: "Please verify your email first" });
+  }
+
+  
+  // console.log("Input password:", password);
+  // console.log("Stored hash:", user.password);
+
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) {
+    return res.status(400).json({ message: "Invalid email or password" });
+  }
+
+  const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+    expiresIn: "1h",
+  });
+
+  return res.json({ message: "Sign in successful", token, name: user.name,});
+});
+
+// ✅ START SERVER
+const PORT = process.env.PORT || 5050;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});

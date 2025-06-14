@@ -161,13 +161,13 @@ app.post("/SignIn", async (req, res) => {
   res.json({ message: "Sign in successful", token, name: user.name });
 });
 
-// 🔐 FORGOT PASSWORD
 app.post("/forgotPassword", async (req, res) => {
   const { email } = req.body;
   const user = await register.findOne({ email });
 
   if (!user) return res.status(404).json({ message: "User not found." });
 
+  const name = user.name;
   const token = crypto.randomBytes(32).toString("hex");
   await ForgotPassword.create({ email, token });
 
@@ -181,61 +181,57 @@ app.post("/forgotPassword", async (req, res) => {
     },
   });
 
-  html: `
-  <div style="max-width: 600px; margin: auto; font-family: Arial, sans-serif; background: #ffffff; border: 1px solid #e5e7eb;">
-    
-    <!-- Header -->
-    <div style="background-color: #41CA1A; padding: 20px;">
-      <h1 style="margin: 0; color: white; font-size: 24px; text-align: center;">
-        <span style="color: #41CA1A;">Power</span><span style="color: #FF9E1B;">Org</span>
-      </h1>
-    </div>
+  const mailOptions = {
+    from: `"PowerOrg Support" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: "Reset Your PowerOrg Password",
+    html: `
+      <div style="max-width: 600px; margin: auto; font-family: Arial, sans-serif; background: #ffffff; border: 1px solid #e5e7eb;">
+        <div style="background-color: #41CA1A; padding: 20px; text-align: center;">
+          <h1 style="margin: 0; font-size: 24px;">
+            <span style="color: #41CA1A;">Power</span><span style="color: #FF9E1B;">Org</span>
+          </h1>
+        </div>
 
-    <!-- Body -->
-    <div style="padding: 24px 20px; color: #1f2937;">
-      <h2 style="margin-top: 0; font-size: 22px; color: #1f2937;">Password reset request</h2>
-      
-      <p style="font-size: 16px;">Hi ${name || "there"},</p>
+        <div style="padding: 24px 20px; color: #1f2937;">
+          <h2 style="font-size: 22px; margin-top: 0;">Password reset request</h2>
+          
+          <p style="font-size: 16px;">Hi ${name || "there"},</p>
 
-      <p style="font-size: 15px; line-height: 1.5;">
-        We received a request to reset your password. To proceed, simply click the button below. You may be asked to verify your identity before updating your password.
-      </p>
+          <p style="font-size: 15px; line-height: 1.5;">
+            We received a request to reset your password. To proceed, simply click the button below. You may be asked to verify your identity before updating your password.
+          </p>
 
-      <p style="font-size: 14px; font-weight: bold; margin-top: 20px;">
-        Please note: This request will expire in 1 hour.
-      </p>
+          <p style="font-size: 14px; font-weight: bold; margin-top: 20px;">
+            Please note: This request will expire in 1 hour.
+          </p>
 
-      <div style="text-align: center; margin: 30px 0;">
-        <a href="${resetLink}" style="background-color: #41CA1A; color: white; padding: 14px 28px; font-size: 16px; border-radius: 30px; text-decoration: none; font-weight: bold; display: inline-block;">
-          Reset your password
-        </a>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetLink}" style="background-color: #41CA1A; color: white; padding: 14px 28px; font-size: 16px; border-radius: 30px; text-decoration: none; font-weight: bold; display: inline-block;">
+              Reset your password
+            </a>
+          </div>
+
+          <p style="font-size: 14px; color: #374151;">
+            Having trouble? Copy and paste this link into your browser:
+          </p>
+
+          <p style="font-size: 13px; word-break: break-word;">
+            <a href="${resetLink}" style="color: #1f2937;">${resetLink}</a>
+          </p>
+
+          <p style="font-size: 14px;">If you didn’t request this, no further action is required.</p>
+
+          <p style="font-size: 14px;">Thank you,<br />The PowerOrg Team</p>
+        </div>
+
+        <div style="background-color: #f9fafb; padding: 20px; text-align: center; font-size: 12px; color: #6b7280;">
+          Need help? <a href="https://powerorg.netlify.app/contact" style="color: #41CA1A; text-decoration: none;">Contact Support</a><br/>
+          &copy; ${new Date().getFullYear()} PowerOrg Inc. All rights reserved.
+        </div>
       </div>
-
-      <p style="font-size: 14px; color: #374151;">
-        Having trouble? Copy and paste this link into your browser:
-      </p>
-
-      <p style="font-size: 13px; word-break: break-all;">
-        <a href="${resetLink}" style="color: #1f2937;">${resetLink}</a>
-      </p>
-
-      <p style="font-size: 14px; margin-top: 24px;">
-        If you didn’t request this, no further action is required.
-      </p>
-
-      <p style="font-size: 14px;">
-        Thank you,<br />
-        The PowerOrg Team
-      </p>
-    </div>
-
-    <!-- Footer -->
-    <div style="background-color: #f9fafb; padding: 20px; text-align: center; font-size: 12px; color: #6b7280;">
-      Need help? <a href="https://powerorg.netlify.app/contact" style="color: #41CA1A; text-decoration: none;">Contact Support</a><br/>
-      &copy; ${new Date().getFullYear()} PowerOrg Inc. All rights reserved.
-    </div>
-  </div>
-`;
+    `,
+  };
 
   try {
     await transporter.sendMail(mailOptions);

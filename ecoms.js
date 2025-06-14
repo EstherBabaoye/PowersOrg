@@ -186,51 +186,55 @@ app.post("/forgotPassword", async (req, res) => {
     to: email,
     subject: "Reset Your PowerOrg Password",
     html: `
-      <div style="max-width: 600px; margin: auto; font-family: Arial, sans-serif; background: #ffffff; border: 1px solid #e5e7eb;">
-        <div style="background-color: #f5f5f5; padding: 20px; text-align: center;">
-          <h1 style="margin: 0; font-size: 24px;">
-            <span style="color: #41CA1A;">Power</span><span style="color: #FF9E1B;">Org</span>
-          </h1>
-        </div>
-
-        <div style="padding: 24px 20px; color: #1f2937;">
-          <h2 style="font-size: 22px; margin-top: 0;">Password reset request</h2>
-          
-          <p style="font-size: 16px;">Hi ${name || "there"},</p>
-
-          <p style="font-size: 15px; line-height: 1.5;">
-            We received a request to reset your password. To proceed, simply click the button below. You may be asked to verify your identity before updating your password.
-          </p>
-
-          <p style="font-size: 14px; font-weight: bold; margin-top: 20px;">
-            Please note: This request will expire in 1 hour.
-          </p>
-
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${resetLink}" style="background-color: #41CA1A; color: white; padding: 14px 28px; font-size: 16px; border-radius: 30px; text-decoration: none; font-weight: bold; display: inline-block;">
-              Reset your password
-            </a>
-          </div>
-
-          <p style="font-size: 14px; color: #374151;">
-            Having trouble? Copy and paste this link into your browser:
-          </p>
-
-          <p style="font-size: 13px; word-break: break-word;">
-            <a href="${resetLink}" style="color: #1f2937;">${resetLink}</a>
-          </p>
-
-          <p style="font-size: 14px;">If you didn’t request this, no further action is required.</p>
-
-          <p style="font-size: 14px;">Thank you,<br />The PowerOrg Team</p>
-        </div>
-
-        <div style="background-color: #f9fafb; padding: 20px; text-align: center; font-size: 12px; color: #6b7280;">
-          Need help? <a href="https://powerorg.netlify.app/contact" style="color: #41CA1A; text-decoration: none;">Contact Support</a><br/>
-          &copy; ${new Date().getFullYear()} PowerOrg Inc. All rights reserved.
-        </div>
+    <div style="max-width: 600px; margin: auto; font-family: Arial, sans-serif; background: #ffffff; border: 1px solid #e5e7eb;">
+      
+      <!-- Header with Light Grey Background -->
+      <div style="background-color: #f5f5f5; padding: 24px; text-align: center;">
+        <h1 style="margin: 0; font-size: 28px; font-weight: bold;">
+          <span style="color: #41CA1A;">Power</span><span style="color: #FF9E1B;">Org</span>
+        </h1>
       </div>
-    `,
+
+      <!-- Body Content -->
+      <div style="padding: 24px 20px; color: #1f2937;">
+        <h2 style="font-size: 22px; margin-top: 0;">Password reset request</h2>
+        
+        <p style="font-size: 16px;">Hi ${name || "there"},</p>
+
+        <p style="font-size: 15px; line-height: 1.5;">
+          We received a request to reset your password. To proceed, simply click the button below. You may be asked to verify your identity before updating your password.
+        </p>
+
+        <p style="font-size: 14px; font-weight: bold; margin-top: 20px;">
+          Please note: This request will expire in 1 hour.
+        </p>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${resetLink}" style="background-color: #41CA1A; color: white; padding: 14px 28px; font-size: 16px; border-radius: 30px; text-decoration: none; font-weight: bold; display: inline-block;">
+            Reset your password
+          </a>
+        </div>
+
+        <p style="font-size: 14px; color: #374151;">
+          Having trouble? Copy and paste this link into your browser:
+        </p>
+
+        <p style="font-size: 13px; word-break: break-word;">
+          <a href="${resetLink}" style="color: #1f2937;">${resetLink}</a>
+        </p>
+
+        <p style="font-size: 14px;">If you didn’t request this, no further action is required.</p>
+
+        <p style="font-size: 14px;">Thank you,<br />The PowerOrg Team</p>
+      </div>
+
+      <!-- Footer -->
+      <div style="background-color: #f9fafb; padding: 20px; text-align: center; font-size: 12px; color: #6b7280;">
+        Need help? <a href="https://powerorg.netlify.app/contact" style="color: #41CA1A; text-decoration: none;">Contact Support</a><br/>
+        &copy; ${new Date().getFullYear()} PowerOrg Inc. All rights reserved.
+      </div>
+    </div>
+  `,
   };
 
   try {

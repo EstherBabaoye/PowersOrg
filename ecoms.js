@@ -187,7 +187,7 @@ app.post("/forgotPassword", async (req, res) => {
     subject: "Reset Your PowerOrg Password",
     html: `
       <div style="max-width: 600px; margin: auto; font-family: Arial, sans-serif; background: #ffffff; border: 1px solid #e5e7eb;">
-        <div style="background-color: #41CA1A; padding: 20px; text-align: center;">
+        <div style="background-color: #f5f5f5; padding: 20px; text-align: center;">
           <h1 style="margin: 0; font-size: 24px;">
             <span style="color: #41CA1A;">Power</span><span style="color: #FF9E1B;">Org</span>
           </h1>
